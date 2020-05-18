@@ -52,7 +52,7 @@ def get_parser() -> argparse.ArgumentParser:
         "--time_delay", 
         type = bool, 
         default= True, 
-        help= "Specify time delay after every 50 url requests",
+        help= "Specify time delay after every url request",
         )
     
     return parser

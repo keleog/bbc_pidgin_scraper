@@ -16,7 +16,7 @@ pip install beautifulsoup4
 
 **Command line arguments:**
 
-```--output_file_name```  : Indicates output file name where scraped articles will be saved. File name must have a csv extension. Default value = ```pidgin_corpus.csv```
+```--output_file_name```  : Indicates output file name where scraped articles will be saved. File name must have a csv extension. Default value = ```bbc_pidgin_corpus.csv```
 
 ```--no_of_articles```  : Indicates the total number of articles you want to scrape. If set to -1, all articles found will be scraped. Default value = ```-1```
 
@@ -36,6 +36,15 @@ python scraper.py --no_of_articles=-1 --output_file_name=all_corpus.csv --catego
 
 
 ![Sample](./sample.png)
+
+
+## Scraped Data:
+
+Two files containing all articles in the BBC Pidgin archive are in the [data folder](./data)
+
+- **pidgin_corpus.csv**  is in the format in the Sample section. 
+
+- **pidgin_corpus.txt** is a free-flowing text file containing headline and article text separated by new lines. 
 
 
 
