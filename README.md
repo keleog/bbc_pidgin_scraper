@@ -47,6 +47,11 @@ Two files containing all articles in the BBC Pidgin archive are in the [data fol
 - **pidgin_corpus.txt** is a free-flowing text file containing headline and article text separated by new lines. 
 
 
+## NB:
+The BBC regularly changes the HTML class attributes in its website, so this scraper might be out of out of date. 
+
+**Scraper works fine as at 11th of July, 2020.**
+
 
 ## License
 **MIT**: See the [LICENSE](LICENSE) file for more details.

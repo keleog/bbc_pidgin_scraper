@@ -1,8 +1,9 @@
 import argparse
 import csv
+import itertools
 import logging
-import time
 import pickle
+import time
 
 import requests
 from bs4 import BeautifulSoup
@@ -150,18 +151,25 @@ def get_article_data(article_url:str) -> tuple:
     """
     page_soup = get_page_soup(article_url)
 
-    headline = page_soup.find("h1", attrs={"class":"story-body__h1"})
+    headline = page_soup.find(
+        "h1", attrs={"class":"Headline-sc-1kh1qhu-0 StyledHeadline-sc-1ffcmag-0 jsOCZS"}
+        )
+    # by inspection, if the headline is not in the class above, it should be in the one below
+    if not headline:
+        headline = page_soup.find(
+            "strong", attrs={"class":"Headline-sc-1kh1qhu-0 hzbExq StyledFauxHeadline-sc-15zvetq-0 jJBkMr"}
+            )
     
     if headline:
         headline = headline.text.strip()
     
     story_text = " "
-    story_div = page_soup.find_all("div", attrs={"class":"story-body__inner"})
+    story_div = page_soup.find_all(
+        "div", attrs={"class":"GridItemConstrainedMedium-sc-12lwanc-2 fVauYi"}
+        )
     if story_div:
-        # typically, only one story body inner element exists. 
-        # so we take the first element of the ResultSet
-        # TODO: handle multiple cases, even though I have not come across any such case
-        all_paragraphs = story_div[0].findAll("p", recursive=False)
+        all_paragraphs = [div.findAll("p", recursive=False) for div in story_div]
+        all_paragraphs = list(itertools.chain(*all_paragraphs))
         story_text = story_text.join(str(paragraph) for paragraph in all_paragraphs)
         story_text = BeautifulSoup(story_text, "html.parser").get_text()
     story_text = story_text if not story_text == " " else None
