@@ -2,24 +2,18 @@ import argparse
 import csv
 import itertools
 import logging
-import pickle
 import time
 from typing import Dict, List, Optional, Tuple
 
 import requests
+import yaml
 from bs4 import BeautifulSoup
 
 logging.root.setLevel(logging.INFO)
 
-# specify all categories on the bbc pidgin website
-ALL_CATEGORIES = {
-    "nigeria": "https://www.bbc.com/pidgin/topics/c2dwqd1zr92t",
-    "africa":"https://www.bbc.com/pidgin/topics/c404v061z85t",
-    "sport":"https://www.bbc.com/pidgin/topics/cjgn7gv77vrt",
-    "world":"https://www.bbc.com/pidgin/world", 
-    "entertainment":"https://www.bbc.com/pidgin/topics/cqywjyzk2vyt", 
-    "most_popular":"https://www.bbc.com/pidgin/popular/read"
-    }
+ENV = yaml.load(open("env.yml"), Loader=yaml.FullLoader)
+ALL_CATEGORIES = ENV["CATEGORY_URLS"]
+
 
 def get_parser() -> argparse.ArgumentParser:
     """
@@ -57,6 +51,12 @@ def get_parser() -> argparse.ArgumentParser:
         help= "Specify time delay after every url request",
         )
     
+    parser.add_argument(
+        "--spread",
+        action="store_true",
+        help="Spread `no_of_articles` evenly across categories"
+    )
+    
     return parser
 
 
@@ -77,7 +77,7 @@ def get_page_soup(url:str) -> BeautifulSoup:
     return page_soup
 
 
-def get_urls(category_url:str, category:str, time_delay:bool) -> List[str]:
+def get_urls(category_url:str, category:str, time_delay:bool, articles_per_category: int = None) -> List[str]:
     """
     Obtains all the article urls from the category url it takes in
 
@@ -92,7 +92,7 @@ def get_urls(category_url:str, category:str, time_delay:bool) -> List[str]:
 
     # get total number of pages for given category
     article_count_span = page_soup.find_all(
-        "span", attrs={"class":"lx-pagination__page-number qa-pagination-total-page-number"}
+        "span", attrs={"class": ENV["ARTICLE_COUNT_SPAN"]}
         )
     # if there are multiple pages, get valid urls from each page
     # else just get the articles on the first page
@@ -101,14 +101,21 @@ def get_urls(category_url:str, category:str, time_delay:bool) -> List[str]:
         logging.info(f"{total_article_count} pages found for {category}")
         logging.info(f"{len(category_urls)} urls in page 1 gotten for {category}")
 
+        if articles_per_category and len(category_urls) >= articles_per_category:
+                return category_urls
+
         for count in range(1, total_article_count):
+
             page_soup = get_page_soup(category_url + f"/page/{count+1}")
             page_urls = get_valid_urls(page_soup)
             logging.info(f"{len(page_urls)} urls in page {count+1} gotten for {category}")
             category_urls+=page_urls
+            
+            if articles_per_category and len(category_urls) >= articles_per_category:
+                break
+
             if time_delay: 
                 time.sleep(10)
-    
     else:
         logging.info(f"Only one page found for {category}. {len(category_urls)} urls gotten")
 
@@ -153,12 +160,13 @@ def get_article_data(article_url:str) -> Tuple[Optional[str], Optional[str], str
     page_soup = get_page_soup(article_url)
 
     headline = page_soup.find(
-        "h1", attrs={"class":"Headline-sc-1kh1qhu-0 StyledHeadline-sc-1ffcmag-0 jsOCZS"}
+        "h1", attrs={"class": ENV["HEADLINE_SPAN_CLASS_A"]}
         )
     # by inspection, if the headline is not in the class above, it should be in the one below
+    # TODO: Investigate if this is still necessary
     if not headline:
         headline = page_soup.find(
-            "strong", attrs={"class":"Headline-sc-1kh1qhu-0 hzbExq StyledFauxHeadline-sc-15zvetq-0 jJBkMr"}
+            "strong", attrs={"class": ENV["HEADLINE_SPAN_CLASS_B"]}
             )
     
     if headline:
@@ -166,7 +174,7 @@ def get_article_data(article_url:str) -> Tuple[Optional[str], Optional[str], str
     
     story_text = " "
     story_div = page_soup.find_all(
-        "div", attrs={"class":"GridItemConstrainedMedium-sc-12lwanc-2 fVauYi"}
+        "div", attrs={"class": ENV["STORY_DIV_CLASS"]}
         )
     if story_div:
         all_paragraphs = [div.findAll("p", recursive=False) for div in story_div]
@@ -191,7 +199,7 @@ def scrape(output_file_name:str, no_of_articles:int, category_urls:Dict[str, Lis
 
     with open(output_file_name, "w") as csv_file:
         headers = ["headline", "text", "category", "url"]
-        writer = csv.DictWriter(csv_file, delimiter=",", fieldnames = headers)
+        writer = csv.DictWriter(csv_file, delimiter="\t", fieldnames = headers)
         writer.writeheader()
         story_num = 0
 
@@ -241,11 +249,19 @@ if __name__ == "__main__":
     else:
         categories = ALL_CATEGORIES
 
+    articles_per_category = None
+    if params.no_of_articles > 0 and params.spread:
+        if "most_popular" in categories:
+            articles_per_category = (params.no_of_articles-10) // (len(categories)-1)
+        else:
+            articles_per_category = params.no_of_articles // len(categories)
+    print(articles_per_category)
+    
     # get urls
     category_urls = {}
     for category, url in categories.items():
-        logging.info(f"Getting all stories for {category}...")
-        category_story_links = get_urls(url, category, params.time_delay)
+        logging.info(f"Getting stories for {category}...")
+        category_story_links = get_urls(url, category, params.time_delay, articles_per_category)
         logging.info(f"{len(category_story_links)} stories found for {category} category")
         category_urls[category] = category_story_links
 
