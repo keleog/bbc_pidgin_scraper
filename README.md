@@ -6,10 +6,10 @@ A simple python scraper that allows you create pidgin corpus from the BBC Pidgin
 
 - requests
 - beautifulsoup4
+- PyYAML
 
 ```
-pip install requests
-pip install beautifulsoup4
+pip install -r requirements.txt
 ```
 
 ## Using the Scraper
@@ -24,12 +24,20 @@ pip install beautifulsoup4
 
 ```--time_delay``` : If set to True, there will be a delay of 10 seconds between consecutive url requests (recommended). Default = ```True```
 
+```--spread```: If passed, number of articles collected is spread across all categories passed in. If `most_popular` in categories, all its articles are collected and the remainder is spread across other categories. 
+
 To start scraping, you can run the following sample commands:
 
 ```
 git clone https://github.com/keleog/bbc_pidgin_scraper
 cd bbc_pidgin_scraper
-python scraper.py --no_of_articles=-1 --output_file_name=all_corpus.csv --categories=all --time_delay=True
+python scraper.py --no_of_articles=-1 --output_file_name=data/all_corpus.tsv --categories=all --time_delay=True
+```
+
+To scrape a finite number of articles
+```
+$ python scraper.py --no_of_articles=100 --output_file_name=data/corpus.tsv --categories=all 
+--time_delay=True --spread
 ```
 
 **Sample file output:**
@@ -50,7 +58,7 @@ Two files containing all articles in the BBC Pidgin archive are in the [data fol
 ## NB:
 The BBC regularly changes the HTML class attributes in its website, so this scraper might be out of out of date. 
 
-**Scraper works fine as at 11th of July, 2020.**
+**Scraper works fine as at 8th of August, 2021.**
 
 
 ## License
