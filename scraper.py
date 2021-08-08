@@ -243,18 +243,19 @@ if __name__ == "__main__":
 
     # specify categories to scrape
     if params.categories != "all":
-        categories = params.categories.split(",")
-        categories = {category:ALL_CATEGORIES[category] for category in categories}
+        categories = params.categories.upper().split(",")
+        categories = {category: ALL_CATEGORIES[category] for category in categories}
     else:
         categories = ALL_CATEGORIES
 
     articles_per_category = None
     if params.no_of_articles > 0 and params.spread:
         if "most_popular" in categories:
+            # most_popular only has ne page
             articles_per_category = (params.no_of_articles-10) // (len(categories)-1)
         else:
             articles_per_category = params.no_of_articles // len(categories)
-    print(articles_per_category)
+        logging.info(f"Will collect at least {articles_per_category} stories per category")
     
     # get urls
     category_urls = {}
