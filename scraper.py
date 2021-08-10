@@ -4,6 +4,7 @@ import itertools
 import logging
 import pickle
 import time
+from typing import Dict, List, Optional, Tuple
 
 import requests
 from bs4 import BeautifulSoup
@@ -76,7 +77,7 @@ def get_page_soup(url:str) -> BeautifulSoup:
     return page_soup
 
 
-def get_urls(category_url:str, category:str, time_delay:bool) -> list:
+def get_urls(category_url:str, category:str, time_delay:bool) -> List[str]:
     """
     Obtains all the article urls from the category url it takes in
 
@@ -114,7 +115,7 @@ def get_urls(category_url:str, category:str, time_delay:bool) -> list:
     return category_urls
 
 
-def get_valid_urls(category_page:BeautifulSoup) -> list:
+def get_valid_urls(category_page:BeautifulSoup) -> List[str]:
     """
     Gets all valid urls from a category page
 
@@ -138,7 +139,7 @@ def get_valid_urls(category_page:BeautifulSoup) -> list:
     return list(set(valid_article_urls))
 
 
-def get_article_data(article_url:str) -> tuple:
+def get_article_data(article_url:str) -> Tuple[Optional[str], Optional[str], str]:
     """
     Obtains paragraphs texts and headlines input url article
 
@@ -177,7 +178,7 @@ def get_article_data(article_url:str) -> tuple:
     return (headline, story_text, article_url)
 
 
-def scrape(output_file_name:str, no_of_articles:int, category_urls:dict, time_delay:bool) -> None:
+def scrape(output_file_name:str, no_of_articles:int, category_urls:Dict[str, List[str]], time_delay:bool) -> None:
     """
     Main function for scraping and writing articles to file
 
@@ -231,7 +232,7 @@ if __name__ == "__main__":
 
     # initialize parser
     parser = get_parser()
-    params, unknown = parser.parse_known_args()
+    params, _ = parser.parse_known_args()
 
     # specify categories to scrape
     if params.categories != "all":
