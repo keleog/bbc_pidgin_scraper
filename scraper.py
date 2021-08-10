@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 
 logging.root.setLevel(logging.INFO)
 
-ENV = yaml.load(open("env.yml"), Loader=yaml.FullLoader)
+ENV = yaml.load(open("config.yml"), Loader=yaml.FullLoader)
 ALL_CATEGORIES = ENV["CATEGORY_URLS"]
 
 
@@ -54,7 +54,8 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--spread",
         action="store_true",
-        help="Spread `no_of_articles` evenly across categories"
+        help="""Spread `no_of_articles` evenly across categories. If `most_popular` in categories, 
+        all its articles are collected and the remainder is spread across other categories"""
     )
     
     return parser
@@ -77,7 +78,12 @@ def get_page_soup(url:str) -> BeautifulSoup:
     return page_soup
 
 
-def get_urls(category_url:str, category:str, time_delay:bool, articles_per_category: int = None) -> List[str]:
+def get_urls(
+    category_url:str, 
+    category:str, 
+    time_delay:bool, 
+    articles_per_category: Optional[int] = None
+    ) -> List[str]:
     """
     Obtains all the article urls from the category url it takes in
 
@@ -102,10 +108,9 @@ def get_urls(category_url:str, category:str, time_delay:bool, articles_per_categ
         logging.info(f"{len(category_urls)} urls in page 1 gotten for {category}")
 
         if articles_per_category and len(category_urls) >= articles_per_category:
-                return category_urls
+            return category_urls
 
         for count in range(1, total_article_count):
-
             page_soup = get_page_soup(category_url + f"/page/{count+1}")
             page_urls = get_valid_urls(page_soup)
             logging.info(f"{len(page_urls)} urls in page {count+1} gotten for {category}")
@@ -244,18 +249,20 @@ if __name__ == "__main__":
 
     # specify categories to scrape
     if params.categories != "all":
-        categories = params.categories.split(",")
-        categories = {category:ALL_CATEGORIES[category] for category in categories}
+        categories = params.categories.upper().split(",")
+        categories = {category: ALL_CATEGORIES[category] for category in categories}
     else:
         categories = ALL_CATEGORIES
 
     articles_per_category = None
     if params.no_of_articles > 0 and params.spread:
-        if "most_popular" in categories:
+        if "MOST_POPULAR" in categories:
+            # most_popular only has one page and 10 articles only
+            # subtract this from no_of_articles to be collected before spreading
             articles_per_category = (params.no_of_articles-10) // (len(categories)-1)
         else:
             articles_per_category = params.no_of_articles // len(categories)
-    print(articles_per_category)
+        logging.info(f"Will collect at least {articles_per_category} stories per category")
     
     # get urls
     category_urls = {}

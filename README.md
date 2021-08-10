@@ -63,7 +63,3 @@ The BBC regularly changes the HTML class attributes in its website, so this scra
 
 ## License
 **MIT**: See the [LICENSE](LICENSE) file for more details.
-
-
-
-
