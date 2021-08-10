@@ -111,6 +111,7 @@ def get_urls(
             return category_urls
 
         for count in range(1, total_article_count):
+
             page_soup = get_page_soup(category_url + f"/page/{count+1}")
             page_urls = get_valid_urls(page_soup)
             logging.info(f"{len(page_urls)} urls in page {count+1} gotten for {category}")
