@@ -11,8 +11,8 @@ from bs4 import BeautifulSoup
 
 logging.root.setLevel(logging.INFO)
 
-ENV = yaml.load(open("config.yml"), Loader=yaml.FullLoader)
-ALL_CATEGORIES = ENV["CATEGORY_URLS"]
+CONFIG = yaml.load(open("config.yml"), Loader=yaml.FullLoader)
+ALL_CATEGORIES = CONFIG["CATEGORY_URLS"]
 
 
 def get_parser() -> argparse.ArgumentParser:
@@ -98,7 +98,7 @@ def get_urls(
 
     # get total number of pages for given category
     article_count_span = page_soup.find_all(
-        "span", attrs={"class": ENV["ARTICLE_COUNT_SPAN"]}
+        "span", attrs={"class": CONFIG["ARTICLE_COUNT_SPAN"]}
         )
     # if there are multiple pages, get valid urls from each page
     # else just get the articles on the first page
@@ -166,13 +166,13 @@ def get_article_data(article_url:str) -> Tuple[Optional[str], Optional[str], str
     page_soup = get_page_soup(article_url)
 
     headline = page_soup.find(
-        "h1", attrs={"class": ENV["HEADLINE_SPAN_CLASS_A"]}
+        "h1", attrs={"class": CONFIG["HEADLINE_SPAN_CLASS_A"]}
         )
     # by inspection, if the headline is not in the class above, it should be in the one below
     # TODO: Investigate if this is still necessary
     if not headline:
         headline = page_soup.find(
-            "strong", attrs={"class": ENV["HEADLINE_SPAN_CLASS_B"]}
+            "strong", attrs={"class": CONFIG["HEADLINE_SPAN_CLASS_B"]}
             )
     
     if headline:
@@ -180,7 +180,7 @@ def get_article_data(article_url:str) -> Tuple[Optional[str], Optional[str], str
     
     story_text = " "
     story_div = page_soup.find_all(
-        "div", attrs={"class": ENV["STORY_DIV_CLASS"]}
+        "div", attrs={"class": CONFIG["STORY_DIV_CLASS"]}
         )
     if story_div:
         all_paragraphs = [div.findAll("p", recursive=False) for div in story_div]
